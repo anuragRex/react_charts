@@ -9,6 +9,7 @@ import React, {Component} from 'react';
 // eslint-disable-next-line
 import {Bar, Line, Pie} from 'react-chartjs-2';
 import Highcharts from 'highcharts';
+import Highstock from 'highcharts/highstock';
 
 class ChartComponent extends Component{
     constructor(props){
@@ -65,8 +66,12 @@ class ChartComponent extends Component{
                         ]
                     }
                 ]
-            }
-        }
+            },
+            seriesOptions: [],
+            seriesFilterOptions: [],
+            seriesCounter : 0,
+            names : ['MSFT', 'AAPL', 'GOOG'],
+        }  //end of state
     }
 
     highChartsRender1=()=> {
@@ -151,7 +156,79 @@ class ChartComponent extends Component{
             }]
         });
     }
+    
+    createChart = () => {
+        Highstock.stockChart('highchart', {
+    
+            rangeSelector: {
+                selected: 4
+            },
+    
+            yAxis: {
+                labels: {
+                    formatter: function () {
+                        return (this.value > 0 ? ' + ' : '') + this.value + '%';
+                    }
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 2,
+                    color: 'silver'
+                }]
+            },
+    
+            plotOptions: {
+                series: {
+                    compare: 'percent',
+                    showInNavigator: true
+                }
+            },
+    
+            tooltip: {
+                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b>({point.change}%)<br/>',
+                valueDecimals: 2,
+                split: true
+            },
+            series: this.state.seriesOptions
+        });
+        
+      }
 
+    getStockChartAPI =() =>{
+        //https://www.highcharts.com/samples/data/msft-c.json
+        //https://www.highcharts.com/samples/data/aapl-c.json
+        // https://www.highcharts.com/samples/data/goog-c.json
+        fetch('https://www.highcharts.com/samples/data/msft-c.json')
+        .then(response => response.json())
+        .then((json) => {
+            this.setState((prevState)=>({
+                seriesOptions:[...prevState.seriesOptions, {color: 'black',name:'MSFT',data:json}]
+            }));
+
+            //console.log(this.state.seriesOptions);
+            this.createChart();
+        });
+        fetch('https://www.highcharts.com/samples/data/aapl-c.json')
+        .then(response => response.json())
+        .then((json) => {
+            this.setState((prevState)=>({
+                seriesOptions:[...prevState.seriesOptions, {color: 'purple',name:'AAPL',data:json}]
+            }));
+
+            //console.log(this.state.seriesOptions);
+            this.createChart();
+        });
+        fetch('https://www.highcharts.com/samples/data/goog-c.json')
+        .then(response => response.json())
+        .then((json) => {
+            this.setState((prevState)=>({
+                seriesOptions:[...prevState.seriesOptions, { name:'GOOG',data:json}]
+            }));
+
+            //console.log(this.state.seriesOptions);
+            this.createChart();
+        });
+    }
     componentDidMount() {
         fetch('https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/usdeur.json')
         .then(response => response.json())
@@ -164,6 +241,7 @@ class ChartComponent extends Component{
         })
         
         this.highChartsRender1();
+        this.getStockChartAPI();
     }
     
     render(){
@@ -188,6 +266,8 @@ class ChartComponent extends Component{
 
                 <div id="atmospheric-composition"></div>
                 <div id="container"></div>
+                <h2> High Chart local Temperature</h2>
+                <div id="highchart"></div>
             </div>
         )
     }
